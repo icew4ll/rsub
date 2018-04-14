@@ -1,0 +1,10 @@
+[package]
+name = "rsub"
+version = "0.1.0"
+authors = ["icew4ll <icew4ll.io>"]
+
+[dependencies]
+subprocess = "0.1.12"
+error-chain = "0.11.0"
+duct = "0.10.0"
+csv = "0.15.0"
