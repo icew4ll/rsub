@@ -1,7 +1,9 @@
 // extern crate csv;
+extern crate colored;
 extern crate csv;
 extern crate subprocess;
 
+use colored::*;
 use std::error::Error;
 use std::io;
 use std::process;
@@ -35,7 +37,7 @@ fn test() -> Result<(), Box<Error>> {
             .stderr(Redirection::Merge)
             .capture()?
             .stdout_str();
-        println!("Made {} {}", &i[0], out);
+        println!("Made {} {}", &i[0].red(), out);
     }
     // ls directory
     let lsdir = "./test";
@@ -54,6 +56,7 @@ fn test() -> Result<(), Box<Error>> {
     let length = lsparse.len() - 1;
     println!("{} has {} items", lsdir, length);
     lsparse.truncate(length);
+    println!("[ {}]", lsparse.iter().fold(String::new(), |acc, &num| acc + &num.to_string() + " ").on_bright_blue());
     println!("{:?}", lsparse);
     Ok(())
 }
