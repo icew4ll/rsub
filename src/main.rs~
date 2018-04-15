@@ -18,6 +18,7 @@ fn main() {
 
 fn test() -> Result<(), Box<Error>> {
     let mut v = Vec::new();
+    let mut v2 = Vec::new();
     let mut rdr = csv::Reader::from_reader(io::stdin());
     for result in rdr.records() {
         let record = result?;
@@ -25,7 +26,7 @@ fn test() -> Result<(), Box<Error>> {
     }
 
     for i in v {
-        // println!("{:?}", i[0]);
+        // reference i to iterate
         let t = &i[0];
         let out = Exec::cmd("touch")
             .arg(t)
@@ -34,6 +35,26 @@ fn test() -> Result<(), Box<Error>> {
             .stderr(Redirection::Merge)
             .capture()?
             .stdout_str();
+        println!("Made {} {}", &i[0], out);
     }
+    // ls directory
+    // let lsdir = "/home/ice/m";
+    let lsdir = "./test";
+    let ls = Exec::cmd("ls")
+        .cwd(lsdir)
+        .stdout(Redirection::Pipe)
+        .stderr(Redirection::Merge)
+        .capture()?
+        .stdout_str();
+    // push to vector
+    v2.push(ls);
+    // split on new line
+    let lssplit = v2[0].split("\n");
+    let mut lsparse: Vec<&str> = lssplit.collect();
+    // remove last line
+    let length = lsparse.len() - 1;
+    println!("{} has {} items", lsdir, length);
+    lsparse.truncate(length);
+    println!("{:?}", lsparse);
     Ok(())
 }
