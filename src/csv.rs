@@ -1,9 +1,7 @@
 extern crate ssh2;
 extern crate colored;
 extern crate csv;
-extern crate regex;
 
-use regex::Regex;
 use std::fs::File;
 use std::process;
 use std::net::TcpStream;
@@ -24,13 +22,16 @@ fn csvread(conn: &mut Vec<Record>) -> Result<(), Box<Error>> {
     Ok(())
 }
 
-fn ssh(conn: &mut Vec<Record>, mailq: &mut Vec<(String)>) -> Result<(), Box<Error>> {
+fn ssh(conn: &mut Vec<Record>) -> Result<(), Box<Error>> {
+    // Connect to the local SSH server
+    //ssh 'root@216.230.254.45'
     let ip = format!("{}:22", &conn[0].0);
     let user = &conn[0].1;
     let pass = &conn[0].2;
     let tcp = TcpStream::connect(ip)?;
     let mut sess = Session::new().unwrap();
     sess.handshake(&tcp)?;
+
     sess.userauth_password(user, pass)?;
     assert!(sess.authenticated());
 
@@ -40,14 +41,13 @@ fn ssh(conn: &mut Vec<Record>, mailq: &mut Vec<(String)>) -> Result<(), Box<Erro
     let mut s = String::new();
     channel.read_to_string(&mut s)?;
     println!("{}", s.red());
-    mailq.push(s.clone());
+    println!("Exit Status: {}", channel.exit_status()?);
     Ok(())
 }
 
 fn main() {
-    // init data vector
+    // init conn vector
     let mut conn = Vec::new();
-    let mut mailq = Vec::new();
 
     // csv read function
     if let Err(err) = csvread(&mut conn) {
@@ -56,9 +56,8 @@ fn main() {
     }
 
     // ssh function
-    if let Err(err) = ssh(&mut conn, &mut mailq) {
+    if let Err(err) = ssh(&mut conn) {
         println!("{}", err);
         process::exit(1);
     }
-    println!("{:?}", mailq);
 }

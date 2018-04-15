@@ -1,0 +1,12 @@
+Permission denied, please try again.
+Last login: Sun Apr 15 21:36:46 2018 from 216.230.243.206
+]0;root@amout05:~[root@amout05 ~]# 
+]0;root@amout05:~[root@amout05 ~]# 
+]0;root@amout05:~[root@amout05 ~]# 
+]0;root@amout05:~[root@amout05 ~]# iej
+]0;root@amout05:~[root@amout05 ~]# 
+]0;root@amout05:~[root@amout05 ~]# 
+]0;root@amout05:~[root@amout05 ~]# 
+]0;root@amout05:~[root@amout05 ~]# 
+]0;root@amout05:~[root@amout05 ~]# logout
+[H[2JConnection to 216.230.254.45 closed.

@@ -1,62 +1,64 @@
-// extern crate csv;
+extern crate ssh2;
 extern crate colored;
 extern crate csv;
-extern crate subprocess;
+extern crate regex;
 
-use colored::*;
-use std::error::Error;
-use std::io;
+use regex::Regex;
+use std::fs::File;
 use std::process;
+use std::net::TcpStream;
+use ssh2::Session;
+use std::io::Read;
+use std::error::Error;
+use colored::*;
 
-use subprocess::{Exec, Redirection};
+type Record = (String, String, String);
+
+fn csvread(conn: &mut Vec<Record>) -> Result<(), Box<Error>> {
+    let file = File::open("conn.csv")?;
+    let mut rdr = csv::ReaderBuilder::new().flexible(true).from_reader(file);
+    for result in rdr.deserialize() {
+        let record: Record = result?;
+        conn.push(record);
+    }
+    Ok(())
+}
+
+fn ssh(conn: &mut Vec<Record>, mailq: &mut Vec<(String)>) -> Result<(), Box<Error>> {
+    let ip = format!("{}:22", &conn[0].0);
+    let user = &conn[0].1;
+    let pass = &conn[0].2;
+    let tcp = TcpStream::connect(ip)?;
+    let mut sess = Session::new().unwrap();
+    sess.handshake(&tcp)?;
+    sess.userauth_password(user, pass)?;
+    assert!(sess.authenticated());
+
+
+    let mut channel = sess.channel_session()?;
+    channel.exec("mailq | grep Apr | awk '{print $7}' | sort | uniq -c | sort -n")?;
+    let mut s = String::new();
+    channel.read_to_string(&mut s)?;
+    println!("{}", s.red());
+    mailq.push(s.clone());
+    Ok(())
+}
 
 fn main() {
-    // test function
-    if let Err(err) = test() {
+    // init data vector
+    let mut conn = Vec::new();
+    let mut mailq = Vec::new();
+
+    // csv read function
+    if let Err(err) = csvread(&mut conn) {
         println!("{}", err);
         process::exit(1);
     }
-}
 
-fn test() -> Result<(), Box<Error>> {
-    let mut v = Vec::new();
-    let mut v2 = Vec::new();
-    let mut rdr = csv::Reader::from_reader(io::stdin());
-    for result in rdr.records() {
-        let record = result?;
-        v.push(record);
+    // ssh function
+    if let Err(err) = ssh(&mut conn, &mut mailq) {
+        println!("{}", err);
+            process::exit(1);
     }
-
-    for i in v {
-        // reference i to iterate
-        let t = &i[0];
-        let out = Exec::cmd("touch")
-            .arg(t)
-            .cwd("./test")
-            .stdout(Redirection::Pipe)
-            .stderr(Redirection::Merge)
-            .capture()?
-            .stdout_str();
-        println!("Made {} {}", &i[0].red(), out);
-    }
-    // ls directory
-    let lsdir = "./test";
-    let ls = Exec::cmd("ls")
-        .cwd(lsdir)
-        .stdout(Redirection::Pipe)
-        .stderr(Redirection::Merge)
-        .capture()?
-        .stdout_str();
-    // push to vector
-    v2.push(ls);
-    // split on new line
-    let lssplit = v2[0].split("\n");
-    let mut lsparse: Vec<&str> = lssplit.collect();
-    // remove last line
-    let length = lsparse.len() - 1;
-    println!("{} has {} items", lsdir, length);
-    lsparse.truncate(length);
-    println!("[ {}]", lsparse.iter().fold(String::new(), |acc, &num| acc + &num.to_string() + " ").on_bright_blue());
-    println!("{:?}", lsparse);
-    Ok(())
+    println!("{:?}", mailq);
 }
