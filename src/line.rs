@@ -1,7 +1,5 @@
 extern crate colored;
 extern crate csv;
-#[macro_use]
-extern crate lazy_static;
 extern crate regex;
 extern crate ssh2;
 
@@ -14,16 +12,7 @@ use std::io::Read;
 use std::error::Error;
 use colored::*;
 
-#[derive(PartialEq, Default, Clone, Debug)]
-struct Commit {
-    hash: String,
-}
-
 type Record = (String, String, String);
-
-lazy_static! {
-    pub static ref RGX: Regex = Regex::new(r"(\d.* .*)\n").unwrap();
-}
 
 fn csvread(conn: &mut Vec<Record>) -> Result<(), Box<Error>> {
     let file = File::open("conn.csv")?;
@@ -50,16 +39,26 @@ fn ssh(conn: &mut Vec<Record>, mailq: &mut Vec<(String)>) -> Result<(), Box<Erro
     channel.exec("mailq | grep Apr | awk '{print $7}' | sort | uniq -c | sort -n")?;
     let mut s = String::new();
     channel.read_to_string(&mut s)?;
-    // print result command
     println!("{}", s.red());
     mailq.push(s.clone());
     // regex top
-    // let v: Vec<&str> = s.split('\n').collect();
-    // let some_files = glob::glob("foo.*").unwrap().map(|x| x.unwrap());
-    let v2 = s.lines()
-        .map(|x| x.split('\n').collect())
-        .for_each(|x| println!("{:?}", x));
+    // let re = Regex::new(r"(\d.* .*)\n")?;
+    let v: Vec<&str> = s.split('\n').collect();
+    // let mut n1 = 0;
+    // let mut err = "";
+    // for i in v {
+        // let num = i.chars();
+        // println!("{:?}", num);
+    // }
+    println!("{:?}", v);
 
+    // for cap in re.captures_iter(&mailq[0]) {
+        // // println!("{}", &cap[1]);
+        // parsed.push(&cap[1].to_string());
+    // }
+    // println!("{:?}", parsed);
+    // let matches: Vec<_> = re.captures_iter(&mailq[0]);
+    // println!("{:?}", mat);
     Ok(())
 }
 
